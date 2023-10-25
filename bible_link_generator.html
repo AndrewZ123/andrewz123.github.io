@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Verse Link Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f9fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        h1, h2 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input,
+        button {
+            margin-bottom: 10px;
+            padding: 8px;
+            font-size: 16px;
+            width: calc(100% - 16px);
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+        }
+
+        input::placeholder {
+            color: #ccc;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            text-align: center;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        #content {
+            text-align: left;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        @media(max-width: 600px) {
+            input,
+            button {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        <h1>Bible Verse Link Generator</h1>
+        <label for="verseAddress">Enter Verse Address (e.g., "hebrews 7:28"):</label>
+        <input type="text" id="verseAddress" onkeyup="handleKeyUp(event)" placeholder="Type Here..." />
+        <button onclick="generateLinks()">Generate Links</button>
+        <div id="verseContent"></div>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function generateLinks() {
+            var verseAddress = document.getElementById("verseAddress").value.toLowerCase();
+            var parts = verseAddress.split(" ");
+            var book = capitalizeFirstLetter(parts[0]);
+            var chapterVerse = parts[1].split(":");
+            var chapter = capitalizeFirstLetter(chapterVerse[0]);
+            var verse = chapterVerse[1];
+            var blueLetterLink = `https://www.blueletterbible.org/esv/${book}/${chapter}/${verse}/`;
+            var bibleStudyToolsLink = `https://www.biblestudytools.com/${book.toLowerCase()}/${chapter}-${verse}.html`;
+            var bibleHubLink = `https://biblehub.com/${book.toLowerCase()}/${chapter}-${verse}.htm`;
+            var gotQuestionsLink = `https://www.gotquestions.org/search.php?zoom_sort=0&zoom_query=${book}+${chapter}%3A${verse}`;
+
+            // Display the verse content with quotations
+            var verseContentDiv = document.getElementById("verseContent");
+            verseContentDiv.innerHTML = `<h2>Verse: ${book} ${chapter}:${verse}</h2>`;
+
+            var resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <h2>Links:</h2>
+                <ul>
+                    <li><a href="${blueLetterLink}" target="_blank" title="Blue Letter Bible">Blue Letter Bible</a></li>
+                    <li><a href="${bibleStudyToolsLink}" target="_blank" title="Bible Study Tools">Bible Study Tools</a></li>
+                    <li><a href="${bibleHubLink}" target="_blank" title="Bible Hub">Bible Hub</a></li>
+                    <li><a href="${gotQuestionsLink}" target="_blank" title="GotQuestions">GotQuestions</a></li>
+                </ul>
+            `;
+
+            // Clear the text box
+            document.getElementById("verseAddress").value = "";
+
+            // Fetch verse content
+            fetchVerseContent(book, chapter, verse);
+        }
+
+        function handleKeyUp(event) {
+            if (event.key === "Enter") {
+                generateLinks();
+            }
+        }
+
+        function fetchVerseContent(book, chapter, verse) {
+            var apiKey = "6da5bb726c894ac95da829251d21d5ee464f3f80"; // Your API key
+            var url = `https://api.esv.org/v3/passage/text/?q=${book}+${chapter}:${verse}&include-footnotes=false&include-verse-numbers=false&include-passage-references=false&include-audio-link=false&output-format=plain-text`;
+
+            fetch(url, {
+                    headers: {
+                        "Authorization": `Token ${apiKey}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    var verseContentDiv = document.getElementById("verseContent");
+                    var passage = data.passages[0];
+                    verseContentDiv.innerHTML += `<p>"${passage}"</p>`;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+    </script>
+</body>
+
+</html>

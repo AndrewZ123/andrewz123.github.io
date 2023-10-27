@@ -4,8 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bible Verse Link Generator</title>
+    <title>Scripture Routes</title>
     <style>
+        h1, p, label {
+            text-align: center;
+        }
+
+        p {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f9fa;
@@ -63,6 +73,7 @@
 
         li {
             margin-bottom: 10px;
+            text-align: center;
         }
 
         a {
@@ -86,12 +97,110 @@
                 font-size: 14px;
             }
         }
+
+        .nav-button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .nav-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 8px 16px;
+            font-size: 16px;
+        }
+
+        /* Sidebar Styles */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 200px;
+            background-color: #f5f9fa;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #bookSelector,
+        #chapterSelector {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+        }
+
+        #bookSelector {
+            margin-bottom: 20px;
+        }
+
+        .verse-number {
+    font-size: 14px; /* Adjust size as needed */
+    margin-right: 5px; /* Add some space between verse numbers and text */
+}
+
+
+
+#youtubeSidebar {
+            position: fixed;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 200px;
+            background-color: #f5f9fa;
+            padding: 20px;
+            box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #videoList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .videoItem {
+            margin-bottom: 20px;
+        }
+
+        .videoThumbnail {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .videoTitle {
+            font-size: 14px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #youtubeSidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 200px;
+    background-color: #f5f9fa;
+    padding: 20px;
+    box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Add this line for scrollability */
+}
+
+        
     </style>
 </head>
 
 <body>
     <div id="content">
-        <h1>Bible Verse Link Generator</h1>
+        <h1>Scripture Routes</h1>
+        <p>Exploring the Bible, Verse by Verse!</p>
+        <div class="nav-button-container">
+            <button class="nav-button" onclick="loadPreviousVerse()">Previous Verse</button>
+            <button class="nav-button" onclick="loadNextVerse()">Next Verse</button>
+        </div>
         <label for="verseAddress">Enter Verse Address (e.g., "hebrews 7:28"):</label>
         <input type="text" id="verseAddress" onkeyup="handleKeyUp(event)" placeholder="Type Here..." />
         <button onclick="generateLinks()">Generate Links</button>
@@ -99,68 +208,348 @@
         <div id="result"></div>
     </div>
 
+    <div id="sidebar">
+        <h2>Book & Chapter Navigation</h2>
+        <select id="bookSelector" onchange="loadChapters()">
+            <option disabled selected>Select a Book</option>
+        </select>
+        <select id="chapterSelector" onchange="loadChapterVerses()">
+            <option disabled selected>Select a Chapter</option>
+
+        </select>
+        <button onclick="openChapter()">Open Chapter</button>
+
+    </div>
+    <div id="youtubeSidebar">
+        <h2>YouTube Videos</h2>
+        <ul id="videoList"></ul>
+    </div>
+
     <script>
-        function generateLinks() {
-            var verseAddress = document.getElementById("verseAddress").value.toLowerCase();
-            var parts = verseAddress.split(" ");
-            var book = capitalizeFirstLetter(parts[0]);
-            var chapterVerse = parts[1].split(":");
-            var chapter = capitalizeFirstLetter(chapterVerse[0]);
-            var verse = chapterVerse[1];
-            var blueLetterLink = `https://www.blueletterbible.org/esv/${book}/${chapter}/${verse}/`;
-            var bibleStudyToolsLink = `https://www.biblestudytools.com/${book.toLowerCase()}/${chapter}-${verse}.html`;
-            var bibleHubLink = `https://biblehub.com/${book.toLowerCase()}/${chapter}-${verse}.htm`;
-            var gotQuestionsLink = `https://www.gotquestions.org/search.php?zoom_sort=0&zoom_query=${book}+${chapter}%3A${verse}`;
+      async function getChapterVerseCount(book, chapter) {
+    const response = await fetch('bible.json');
+    const data = await response.json();
 
-            // Display the verse content with quotations
+    const bookInfo = data.find(item => item.abbr.toLowerCase() === book.toLowerCase() || item.book.toLowerCase() === book.toLowerCase());
+
+    if (!bookInfo) {
+        console.error(`Book "${book}" not found in the JSON data.`);
+        return 0;
+    }
+
+    const chapterInfo = bookInfo.chapters.find(item => item.chapter === chapter.toString());
+    if (!chapterInfo) {
+        console.error(`Chapter ${chapter} not found for book "${book}".`);
+        return 0;
+    }
+
+    return parseInt(chapterInfo.verses);
+}
+
+
+
+
+async function loadPreviousVerse() {
+    var verseAddress = document.getElementById("verseAddress").value.toLowerCase();
+    var parts = verseAddress.split(" ");
+    var book = parts[0];
+    var chapterVerse = parts[1].split(":");
+    var chapter = parseInt(chapterVerse[0]);
+    var verse = parseInt(chapterVerse[1]);
+
+    if (verse > 1) {
+        verse--;
+    } else {
+        chapter--;
+        if (chapter < 1) {
+            alert(`You've reached the beginning of ${capitalizeFirstLetter(book)}.`);
+            return;
+        } else {
+            var maxVerse = await getChapterVerseCount(book, chapter);
+            verse = maxVerse;
+        }
+    }
+
+    document.getElementById("verseAddress").value = `${book} ${chapter}:${verse}`;
+    generateLinks();
+}
+
+async function loadNextVerse() {
+    var verseAddress = document.getElementById("verseAddress").value.toLowerCase();
+    var parts = verseAddress.split(" ");
+    var book = parts[0];
+    var chapterVerse = parts[1].split(":");
+    var chapter = parseInt(chapterVerse[0]);
+    var verse = parseInt(chapterVerse[1]);
+
+    var maxVerse = await getChapterVerseCount(book, chapter);
+
+    if (verse < maxVerse) {
+        verse++;
+    } else {
+        var maxChapter = await getChapterVerseCount(book, chapter + 1);
+        if (chapter < maxChapter) {
+            chapter++;
+            verse = 1;
+        } else {
+            alert("You've reached the end of the chapter.");
+            return;
+        }
+    }
+
+    document.getElementById("verseAddress").value = `${book} ${chapter}:${verse}`;
+    generateLinks();
+}
+
+function generateLinks() {
+    var verseAddressInput = document.getElementById("verseAddress");
+    var verseAddress = verseAddressInput.value.toLowerCase();
+
+    var parts = verseAddress.split(" ");
+    var book = parts.slice(0, -1).join(" ");
+    var chapterVerse = parts[parts.length - 1].split(":");
+    var chapter = capitalizeFirstLetter(chapterVerse[0]);
+    var verseRange = chapterVerse[1].split("-"); // Handle verse ranges
+
+    var isBookNumber = /^\d/.test(book);
+    var bookSlug = isBookNumber ? `${book.toLowerCase()}_` : book.toLowerCase();
+
+    var blueLetterLink = `https://www.blueletterbible.org/esv/${book}/${chapter}/${verseRange[0]}/`;
+    var bibleStudyToolsLink = `https://www.biblestudytools.com/${bookSlug}/chapter-${chapter}.html#${verseRange[0]}`;
+    var bibleHubLink = `https://biblehub.com/${bookSlug}/${chapter}-${verseRange[0]}.htm`;
+    var gotQuestionsLink = `https://www.gotquestions.org/search.php?zoom_sort=0&zoom_query=${encodeURIComponent(verseAddress)}`;
+
+    var verseContentDiv = document.getElementById("verseContent");
+    verseContentDiv.innerHTML = `<h2>Verse: ${book} ${chapter}:${verseAddress}</h2>`;
+
+    var resultDiv = document.getElementById("result");
+    resultDiv.innerHTML = `
+        <h2>Links:</h2>
+        <ul>
+            <li><a href="${blueLetterLink}" target="_blank" title="Blue Letter Bible">Blue Letter Bible</a></li>
+            <li><a href="${bibleStudyToolsLink}" target="_blank" title="Bible Study Tools">Bible Study Tools</a></li>
+            <li><a href="${bibleHubLink}" target="_blank" title="Bible Hub">Bible Hub</a></li>
+            <li><a href="${gotQuestionsLink}" target="_blank" title="GotQuestions">GotQuestions</a></li>
+        </ul>
+    `;
+
+    // Save the verse address before clearing the text box
+    verseAddressInput.value = verseAddress;
+
+    // Fetch verse content
+    var chapterNumber = parseInt(chapterVerse[0]);
+    var verseNumber = parseInt(verseRange[0]);
+    fetchVerseContent(book, chapterNumber, verseNumber);
+}
+
+function handleKeyUp(event) {
+    if (event.key === "Enter") {
+        generateLinks();
+    }
+}
+
+async function fetchVerseContent(book, chapter, verse) {
+    var apiKey = "6da5bb726c894ac95da829251d21d5ee464f3f80"; // Add your API key here
+
+    // Check if a verse number is provided
+    if (verse) {
+        var url = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(book)}+${chapter}:${verse}&include-footnotes=false&include-verse-numbers=false&include-passage-references=false&include-audio-link=false&output-format=plain-text`;
+
+        try {
+            var response = await fetch(url, {
+                headers: {
+                    "Authorization": `Token ${apiKey}`
+                }
+            });
+            var data = await response.json();
             var verseContentDiv = document.getElementById("verseContent");
-            verseContentDiv.innerHTML = `<h2>Verse: ${book} ${chapter}:${verse}</h2>`;
+            var passage = data.passages[0];
+            passage = passage.replace(/\[(\d+?)\]/g, '<span class="verse-number">$1</span>'); // Remove square brackets and apply styling
+            verseContentDiv.innerHTML = `<h2>Verse: ${book} ${chapter}:${verse}</h2><p>${passage}</p>`;
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    } else {
+        // If no verse number is provided, clear the content
+        var verseContentDiv = document.getElementById("verseContent");
+        verseContentDiv.innerHTML = '';
+    }
+}
 
-            var resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `
-                <h2>Links:</h2>
-                <ul>
-                    <li><a href="${blueLetterLink}" target="_blank" title="Blue Letter Bible">Blue Letter Bible</a></li>
-                    <li><a href="${bibleStudyToolsLink}" target="_blank" title="Bible Study Tools">Bible Study Tools</a></li>
-                    <li><a href="${bibleHubLink}" target="_blank" title="Bible Hub">Bible Hub</a></li>
-                    <li><a href="${gotQuestionsLink}" target="_blank" title="GotQuestions">GotQuestions</a></li>
-                </ul>
-            `;
 
-            // Clear the text box
-            document.getElementById("verseAddress").value = "";
 
-            // Fetch verse content
-            fetchVerseContent(book, chapter, verse);
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+async function loadBooks() {
+    const response = await fetch('bible.json');
+    const data = await response.json();
+
+    const bookSelector = document.getElementById("bookSelector");
+
+    for (const item of data) {
+        const option = document.createElement("option");
+        option.value = item.abbr;
+        option.text = item.book;
+        bookSelector.appendChild(option);
+    }
+}
+
+
+
+async function loadChapters() {
+    const response = await fetch('bible.json');
+    const data = await response.json();
+
+    const bookSelector = document.getElementById("bookSelector");
+    const chapterSelector = document.getElementById("chapterSelector");
+
+    const selectedBook = bookSelector.value;
+
+    // Check if the selected book is "Select a Book"
+    if (selectedBook === "Select a Book") {
+        chapterSelector.innerHTML = "<option disabled selected>Select a Chapter</option>";
+        return;
+    }
+
+    const selectedBookInfo = data.find(item => item.abbr === selectedBook);
+
+    if (!selectedBookInfo) {
+        console.error(`Book "${selectedBook}" not found in the JSON data.`);
+        return;
+    }
+
+    chapterSelector.innerHTML = "<option disabled selected>Select a Chapter</option>";
+
+    for (let i = 1; i <= selectedBookInfo.chapters.length; i++) {
+        const option = document.createElement("option");
+        option.value = i;
+        option.text = `Chapter ${i}`;
+        chapterSelector.appendChild(option);
+    }
+}
+
+function openChapter() {
+    const selectedBook = document.getElementById("bookSelector").value;
+    const selectedChapter = document.getElementById("chapterSelector").value;
+
+    if (selectedBook === "Select a Book" || selectedChapter === "Select a Chapter") {
+        alert("Please select both a book and a chapter.");
+        return;
+    }
+
+    // Fetch chapter content using the API key
+    const apiKey = "6da5bb726c894ac95da829251d21d5ee464f3f80"; // Add your API key here
+    const url = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(selectedBook)}+${selectedChapter}&include-footnotes=false&include-verse-numbers=true&include-passage-references=true&include-audio-link=false&output-format=plain-text`;
+
+    fetch(url, {
+        headers: {
+            "Authorization": `Token ${apiKey}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const chapterContent = data.passages[0];
+
+        // Open a new window and set its content
+        const chapterWindow = window.open("", "_blank");
+        chapterWindow.document.write(`
+            <!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${selectedBook} ${selectedChapter}</title>
+                    <link rel="stylesheet" href="styles.css">
+                </head>
+                <body>
+                    <div class="chapter-content">
+                        <h1>${selectedBook} ${selectedChapter}</h1>
+                        <div class="verse-content">${chapterContent}</div>
+                    </div>
+                </body>
+            </html>
+        `);
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+
+async function searchYouTubeVideos(query) {
+            const apiKey = "AIzaSyCM9VnZ9DyGh1fsHVjfHmvJhdd6JYpEpoY"; // Replace with your YouTube Data API key
+            const maxResults = 5; // Number of videos to retrieve
+
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${apiKey}&q=${query}&maxResults=${maxResults}&part=snippet&type=video`);
+            const data = await response.json();
+
+            return data.items.map(item => ({
+                id: item.id.videoId,
+                title: item.snippet.title,
+                thumbnail: item.snippet.thumbnails.medium.url
+            }));
         }
 
-        function handleKeyUp(event) {
-            if (event.key === "Enter") {
-                generateLinks();
+        async function displayYouTubeVideos(verse) {
+            const videoListElement = document.getElementById("videoList");
+            videoListElement.innerHTML = "";
+
+            try {
+                const videos = await searchYouTubeVideos(verse);
+                videos.forEach(video => {
+                    const videoItemElement = document.createElement("li");
+                    videoItemElement.classList.add("videoItem");
+
+                    videoItemElement.innerHTML = `
+                        <img src="${video.thumbnail}" class="videoThumbnail">
+                        <div class="videoTitle">${video.title}</div>
+                    `;
+
+                    videoListElement.appendChild(videoItemElement);
+                });
+            } catch (error) {
+                console.error('Error fetching YouTube videos:', error);
             }
         }
 
-        function fetchVerseContent(book, chapter, verse) {
-            var apiKey = "6da5bb726c894ac95da829251d21d5ee464f3f80"; // Your API key
-            var url = `https://api.esv.org/v3/passage/text/?q=${book}+${chapter}:${verse}&include-footnotes=false&include-verse-numbers=false&include-passage-references=false&include-audio-link=false&output-format=plain-text`;
+        // Add an event listener to generate links and display YouTube videos
+        document.getElementById("verseAddress").addEventListener("input", function () {
+            generateLinks();
+            const verseAddress = this.value.toLowerCase();
+            displayYouTubeVideos(verseAddress);
+        });
 
-            fetch(url, {
-                    headers: {
-                        "Authorization": `Token ${apiKey}`
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    var verseContentDiv = document.getElementById("verseContent");
-                    var passage = data.passages[0];
-                    verseContentDiv.innerHTML += `<p>"${passage}"</p>`;
-                })
-                .catch(error => console.error('Error:', error));
-        }
+        async function displayYouTubeVideos(verse) {
+    const videoListElement = document.getElementById("videoList");
+    videoListElement.innerHTML = "";
 
-        function capitalizeFirstLetter(string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        }
+    try {
+        const videos = await searchYouTubeVideos(verse);
+        videos.forEach(video => {
+            const videoItemElement = document.createElement("li");
+            videoItemElement.classList.add("videoItem");
+
+            videoItemElement.innerHTML = `
+                <a href="https://www.youtube.com/watch?v=${video.id}" target="_blank">
+                    <img src="${video.thumbnail}" class="videoThumbnail">
+                    <div class="videoTitle">${video.title}</div>
+                </a>
+            `;
+
+            videoListElement.appendChild(videoItemElement);
+        });
+    } catch (error) {
+        console.error('Error fetching YouTube videos:', error);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadBooks);
+
+
+document.addEventListener("DOMContentLoaded", loadChapters);
+
+
     </script>
 </body>
 

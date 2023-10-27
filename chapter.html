@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Chapter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f9fa;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        #chapterContent {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: left;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            font-size: 18px;
+            line-height: 1.6;
+            overflow-x: scroll;
+            padding-left: 50px; /* Increase left padding for margin effect */
+            padding-right: 50px; /* Increase right padding for margin effect */
+            margin-bottom: 50px; /* Add margin at the bottom */
+        }
+
+        .verse {
+            margin-bottom: 10px;
+        }
+
+        .verse-number {
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 10px;
+            color: #007bff;
+        }
+
+        .verse-text {
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 id="chapterTitle"></h1>
+    <div id="chapterContent"></div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const book = urlParams.get('book');
+        const chapter = urlParams.get('chapter');
+
+        document.getElementById("chapterTitle").textContent = `${book} ${chapter}`;
+
+        async function fetchChapterContent(book, chapter) {
+            var apiKey = "6da5bb726c894ac95da829251d21d5ee464f3f80"; // Add your API key here
+            var url = `https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(book)}+${chapter}&include-footnotes=false&include-verse-numbers=true&include-passage-references=false&include-audio-link=false&output-format=plain-text`;
+
+            try {
+                var response = await fetch(url, {
+                    headers: {
+                        "Authorization": `Token ${apiKey}`
+                    }
+                });
+                var data = await response.json();
+                var chapterContentDiv = document.getElementById("chapterContent");
+                var passage = data.passages[0];
+
+                // Format verse numbers and text
+                passage = passage.replace(/(\d+)\s+(.+)/g, '<div class="verse"><span class="verse-number">$1</span><span class="verse-text">$2</span></div>');
+
+                chapterContentDiv.innerHTML = passage;
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        fetchChapterContent(book, chapter);
+    </script>
+</body>
+
+</html>

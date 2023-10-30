@@ -315,7 +315,7 @@ function generateLinks() {
     var bookSlug = isBookNumber ? `${book.toLowerCase()}_` : book.toLowerCase();
 
     var blueLetterLink = `https://www.blueletterbible.org/esv/${book}/${chapter}/${verseRange[0]}/`;
-    var bibleStudyToolsLink = `https://www.biblestudytools.com/${bookSlug}/chapter-${chapter}.html#${verseRange[0]}`;
+    var bibleStudyToolsLink = `https://www.biblestudytools.com/${bookSlug}/${chapter}-${verseRange[0]}.html`;
     var bibleHubLink = `https://biblehub.com/${bookSlug}/${chapter}-${verseRange[0]}.htm`;
     var gotQuestionsLink = `https://www.gotquestions.org/search.php?zoom_sort=0&zoom_query=${encodeURIComponent(verseAddress)}`;
 

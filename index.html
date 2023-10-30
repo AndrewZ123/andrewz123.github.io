@@ -3,17 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scripture Routes</title>
+        <link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
 
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9110788358411202"
-     crossorigin="anonymous"></script>
     <style>
-
-        body {
-        overflow: hidden;
-    }
-        
         h1, p, label {
             text-align: center;
         }
@@ -195,20 +190,12 @@
     padding: 20px;
     box-shadow: -5px 0 10px rgba(0, 0, 0, 0.1);
     overflow-y: auto; /* Add this line for scrollability */
-        
-}
-@media(max-width: 600px) {
-    #sidebar,
-    #youtubeSidebar {
-        display: none;
-    }
 }
 
         
     </style>
 </head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9110788358411202"
-     crossorigin="anonymous"></script>
+
 <body>
     <div id="content">
         <h1>Scripture Routes</h1>
@@ -331,7 +318,7 @@ function generateLinks() {
     var bookSlug = isBookNumber ? `${book.toLowerCase()}_` : book.toLowerCase();
 
     var blueLetterLink = `https://www.blueletterbible.org/esv/${book}/${chapter}/${verseRange[0]}/`;
-    var bibleStudyToolsLink = `https://www.biblestudytools.com/${bookSlug}/${chapter}-${verseRange[0]}.html`;
+    var bibleStudyToolsLink = `https://www.biblestudytools.com/${bookSlug}/chapter-${chapter}.html#${verseRange[0]}`;
     var bibleHubLink = `https://biblehub.com/${bookSlug}/${chapter}-${verseRange[0]}.htm`;
     var gotQuestionsLink = `https://www.gotquestions.org/search.php?zoom_sort=0&zoom_query=${encodeURIComponent(verseAddress)}`;
 

@@ -213,14 +213,13 @@
     <div id="content">
         <h1>Scripture Routes</h1>
         <p>Exploring the Bible, Verse by Verse!</p>
-        <<div class="nav-button-container">
-    <button class="nav-button" onclick="loadPreviousVerse()" style="width: calc(33.33% - 5px);">Previous Verse</button>
-    <button class="nav-button" onclick="loadNextVerse()" style="width: calc(33.33% - 5px);">Next Verse</button>
-</div>
-
+        <div class="nav-button-container">
+            <button class="nav-button" onclick="loadPreviousVerse()">Previous Verse</button>
+            <button class="nav-button" onclick="loadNextVerse()">Next Verse</button>
+        </div>
         <label for="verseAddress">Enter Verse Address (e.g., "hebrews 7:28"):</label>
         <input type="text" id="verseAddress" onkeyup="handleKeyUp(event)" placeholder="Type Here..." />
-                <button onclick="generateLinks()" style="width: calc(33.33% - 5px);">Generate Links</button>
+        <button onclick="generateLinks()">Generate Links</button>
         <div id="verseContent"></div>
         <div id="result"></div>
     </div>
